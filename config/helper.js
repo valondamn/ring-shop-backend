@@ -9,7 +9,7 @@ let conn = new MySqli(
   }
 );
 
-let db = conn.emit(false, '');
+let db = conn.emit(false); // исправлено на conn.emit(false)
 
 module.exports = {
   database: db,

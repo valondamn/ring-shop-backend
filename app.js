@@ -4,13 +4,13 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
 
-const indexRouter = require('./routes/products');
-
-const app = express();
-
 const productsRouter = require('./routes/products');
 const usersRouter = require('./routes/users');
 const ordersRouter = require('./routes/orders');
+const authRoutes = require('./routes/auth');
+const sendEmailRoutes = require('./routes/sendemail');
+
+const app = express();
 
 // Enable CORS middleware
 app.use(cors({
@@ -19,15 +19,22 @@ app.use(cors({
   allowedHeaders: 'Content-Type, Accept, Authorization, X-Requested-With, Origin',
 }));
 
-// Define routes
-app.use('/api/products', productsRouter);
-app.use('/api/users', usersRouter);
-app.use('/api/orders', ordersRouter);
-
+// Logger middleware
 app.use(logger('dev'));
+
+// Middleware for parsing JSON and urlencoded form data
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Define routes after middleware
+app.use('/api/products', productsRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/orders', ordersRouter);
+app.use('/api/auth', authRoutes);
+app.use('/api/send-email', sendEmailRoutes);
 
 module.exports = app;
