@@ -37,26 +37,6 @@ router.post('/add', (req, res) => {
 });
 
 // Обновление данных пользователя
-router.put('/:id', (req, res) => {
-  const userId = req.params.id;
-  const { username, password, email, fname, lname, age, role, photoUrl, type } = req.body;
-
-  // Обновляем данные пользователя в базе данных
-  database.table('users')
-    .filter({ id: userId })
-    .update({ username, password, email, fname, lname, age, role, photoUrl, type })
-    .then(result => {
-      if (result) {
-        res.status(200).json({ message: 'User updated successfully!' });
-      } else {
-        res.status(404).json({ message: 'User not found.' });
-      }
-    })
-    .catch(error => {
-      console.error(error);
-      res.status(500).json({ message: 'Failed to update user.' });
-    });
-});
 
 // Удаление пользователя
 router.delete('/delete/:id', async (req, res) => {

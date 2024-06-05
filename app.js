@@ -8,7 +8,7 @@ const productsRouter = require('./routes/products');
 const usersRouter = require('./routes/users');
 const ordersRouter = require('./routes/orders');
 const authRoutes = require('./routes/auth');
-const sendEmailRoutes = require('./routes/sendemail');
+const sendEmailRoutes = require('./routes/send-email');
 
 const app = express();
 
