@@ -10,7 +10,7 @@ router.get('/', (req, res) => {
       { table: 'products as p', on: 'p.id = od.product_id' },
       { table: 'users as u', on: 'u.id = o.user_id' }
     ])
-    .withFields(['o.id', 'p.title', 'p.description', 'p.price', 'u.username', 'od.quantity'])
+    .withFields(['o.id', 'p.title', 'p.description', 'od.total_amount','od.order_date', 'u.username', 'od.quantity'])
     .getAll()
     .then(orders => {
       res.json(orders.length > 0 ? orders : { message: "No orders found" });
@@ -53,11 +53,14 @@ router.post('/new', async (req, res) => {
       const newOrderId = insertResult.insertId;
 
       if (newOrderId > 0) {
+        let totalAmount = 0;
+
         for (let p of products) {
-          let productData = await database.table('products').filter({ id: p.id }).withFields(['quantity']).get();
+          let productData = await database.table('products').filter({ id: p.id }).withFields(['price', 'quantity']).get();
           let inCart = parseInt(p.quantity);
 
           if (productData && productData.quantity !== undefined) {
+            totalAmount += productData.price * inCart;
             productData.quantity = productData.quantity - inCart;
             if (productData.quantity < 0) {
               productData.quantity = 0;
@@ -66,7 +69,8 @@ router.post('/new', async (req, res) => {
             await database.table('orders_details').insert({
               order_id: newOrderId,
               product_id: p.id,
-              quantity: inCart
+              quantity: inCart,
+              total_amount: productData.price * inCart
             });
 
             await database.table('products').filter({ id: p.id }).update({ quantity: productData.quantity });
@@ -80,7 +84,8 @@ router.post('/new', async (req, res) => {
           message: `Order successfully placed with order id ${newOrderId}`,
           success: true,
           order_id: newOrderId,
-          products: products
+          products: products,
+          total_amount: totalAmount
         });
       } else {
         res.json({ message: 'New order failed while adding order details', success: false });
@@ -92,6 +97,7 @@ router.post('/new', async (req, res) => {
     res.json({ message: 'New order failed', success: false });
   }
 });
+
 
 // Update an Order
 router.put('/:id', async (req, res) => {
@@ -136,11 +142,26 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+router.get('/daily-revenue', (req, res) => {
+  const today = new Date().toISOString().split('T')[0]; // Получаем текущую дату в формате 'YYYY-MM-DD'
+
+  database.table('orders_details')
+    .filter(`DATE(order_date) = '${today}'`)
+    .select(['SUM(total_amount) as dailyRevenue'])
+    .get()
+    .then(result => {
+      res.json(result);
+    })
+    .catch(err => res.json({ message: "Error fetching daily revenue", error: err }));
+});
+
 // Payment Gateway
 router.post('/payment', (req, res) => {
   setTimeout(() => {
     res.status(200).json({ success: true });
   }, 3000);
 });
+
+
 
 module.exports = router;
